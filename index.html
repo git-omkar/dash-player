@@ -1,0 +1,98 @@
+<html>
+<head>
+    <title>DASH Player</title>
+
+    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+
+    <script>
+        var player;
+        function load() //strats player when page is loaded
+        {   
+        	player = dashjs.MediaPlayer().create();
+            player.getDebug().setLogToBrowserConsole(false);
+            var url = "http://localhost:8000/output.mpd";
+            player.initialize(document.querySelector("video"), url, true);
+            
+        }
+        function showEvent(e)  //pulls info on events
+        {
+            log("EVENT: " + e.type);
+    		for (var eName in e)
+            {
+                if (typeof e[eName] != 'object') 
+                {log("    " + eName + ": " + e[eName]);}
+            }
+            for (eName in e)
+            {
+                if (typeof e[eName] == 'object' )
+                {     
+                    log("        " + eName + ": " + JSON.stringify(e[eName]));
+                }
+            }
+            
+        }
+        function log(msg) {
+            msg = msg.length > 100 ? msg.substring(0, 100) + "   " : msg; //Added this as when json is pulled it is long string and this helps wrapping data
+            var tracePanel = document.getElementById("trace");
+            tracePanel.innerHTML += msg + "\n";
+            tracePanel.scrollTop = tracePanel.scrollHeight;
+            console.log(msg);
+        }
+        function playStaus() 
+        {
+        	player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED,showEvent);
+        	player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED,showEvent);	
+        	player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED,showEvent);
+ 		}
+ 		function playTime() //this functions keeps on going till end of video
+ 		{
+ 			player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED,showEvent);
+        }
+        function timeStop() //to stop playTime function
+ 		{
+ 			player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED,showEvent);
+        }
+        function bufferEvents()
+ 		{
+ 			player.on(dashjs.MediaPlayer.events.BUFFER_EMPTY,showEvent);
+ 			player.on(dashjs.MediaPlayer.events.BUFFER_LOADED,showEvent);
+        }
+        function fragmentStart() //this functions keeps on going till end of video giving fragment in on request part of json
+         {
+         	player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED,showEvent);
+   	   }
+   	   function fragmentStop() //to stop fragmentStop
+   	   {
+   	   		player.off(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED,showEvent);
+   	   }
+    </script>
+
+    <style>
+        video {
+            width: 1000px;
+            height: 480px;
+        }
+        textarea {
+            width: 250px;
+            height: 450px;
+            font-size: 10px;
+        }
+    </style>
+    </head>
+    <body onload="load()">
+    	<h3 style="text-align:center">DASH PLAYER with events example</h3>
+        <div>
+            <video controls="true"></video>
+            <textarea id="trace"></textarea> <!--To display event information-->
+            <p><button onclick="playStaus()">Playback staus</button></p>
+            <p><button onclick="playTime()">Playback time</button>
+            <button onclick="timeStop()">Playback time stop</button></p>
+            <p><button onclick="bufferEvents()">Buffer events</button></p>
+            <p><button onclick="fragmentStart()">Fragment Load event</button>
+            <button onclick="fragmentStop()">Stop Fragment Load event</button></p>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+            });
+        </script>
+    </body>
+</html>
